@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
     "@supabase/supabase-js": "^2.47.0",
     "@upstash/ratelimit": "^2.0.5",
     "@vercel/postgres": "^0.10.0",
