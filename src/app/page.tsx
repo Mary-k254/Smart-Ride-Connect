@@ -88,7 +88,7 @@ export default function Home() {
             </div>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            MatatuConnect Kenya
+            Smart Ride Connect
           </h1>
           <p className="text-xl md:text-2xl text-green-100 mb-3">
             Long Distance Matatu Transport System
@@ -293,7 +293,7 @@ export default function Home() {
                 href="/register"
                 className="bg-yellow-400 text-green-900 px-8 py-4 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-colors shadow-lg inline-block"
               >
-                Join MatatuConnect Today
+                Join Smart Ride Connect Today
               </Link>
             </div>
           )}
@@ -361,7 +361,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2 text-white font-bold text-xl">
               <Bus className="h-6 w-6 text-yellow-400" />
-              MatatuConnect Kenya
+              Smart Ride Connect
             </div>
             <div className="flex gap-6 text-sm">
               <Link href="/routes" className="hover:text-white transition-colors">
@@ -378,7 +378,7 @@ export default function Home() {
               </Link>
             </div>
             <div className="text-sm">
-              © 2024 MatatuConnect Kenya. All rights reserved.
+              © 2024 Smart Ride Connect. All rights reserved.
             </div>
           </div>
         </div>

@@ -10,9 +10,9 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "MatatuConnect Kenya - Long Distance Transport System",
+  title: "Smart Ride Connect - Long Distance Transport System",
   description:
-    "Book matatu seats, track vehicles in real-time, and manage transport operations across Kenya",
+    "Book seats, track vehicles in real-time, and manage transport operations across Kenya",
 };
 
 export default function RootLayout({

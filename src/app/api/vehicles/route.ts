@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, initializeDatabase } from "@/lib/db";
 import { vehicles, users, routes, saccos } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/auth";
+import { rateLimitMiddleware, addRateLimitHeaders } from "@/lib/rate-limit";
 import { eq } from "drizzle-orm";
 
 initializeDatabase();
 
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = rateLimitMiddleware(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+  
   try {
     const { searchParams } = new URL(request.url);
     const routeId = searchParams.get("routeId");
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
       ? await query.where(eq(vehicles.routeId, parseInt(routeId)))
       : await query;
 
-    return NextResponse.json({ vehicles: result });
+    return addRateLimitHeaders(NextResponse.json({ vehicles: result }), request);
   } catch (error) {
     console.error("Get vehicles error:", error);
     return NextResponse.json({ error: "Failed to get vehicles" }, { status: 500 });

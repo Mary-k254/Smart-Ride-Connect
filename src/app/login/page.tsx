@@ -42,7 +42,7 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-500 mt-1">Sign in to MatatuConnect Kenya</p>
+          <p className="text-gray-500 mt-1">Sign in to Smart Ride Connect</p>
         </div>
 
         {error && (

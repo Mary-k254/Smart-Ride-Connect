@@ -93,7 +93,7 @@ export default function RegisterPage() {
             </div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-500 mt-1">Join MatatuConnect Kenya</p>
+          <p className="text-gray-500 mt-1">Join Smart Ride Connect</p>
         </div>
 
         {error && (

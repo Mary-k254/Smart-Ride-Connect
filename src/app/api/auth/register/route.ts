@@ -2,11 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, initializeDatabase } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { hashPassword, generateToken, setAuthCookie } from "@/lib/auth";
+import { rateLimitMiddleware, addRateLimitHeaders } from "@/lib/rate-limit";
 import { eq, or } from "drizzle-orm";
 
 initializeDatabase();
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = rateLimitMiddleware(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+  
   try {
     const body = await request.json();
     const { name, email, phone, password, role } = body;
@@ -60,7 +67,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    const token = generateToken({
+    const token = await generateToken({
       userId: newUser.id,
       email: newUser.email || undefined,
       phone: newUser.phone || undefined,
@@ -82,7 +89,7 @@ export async function POST(request: NextRequest) {
     });
 
     response.cookies.set(cookieOptions);
-    return response;
+    return addRateLimitHeaders(response, request);
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json({ error: "Registration failed" }, { status: 500 });

@@ -2,12 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, initializeDatabase } from "@/lib/db";
 import { bookings, routes, vehicles, notifications } from "@/lib/db/schema";
 import { getAuthUser } from "@/lib/auth";
+import { rateLimitMiddleware, addRateLimitHeaders } from "@/lib/rate-limit";
 import { calculateDistance, calculateFare } from "@/lib/utils";
 import { eq, desc } from "drizzle-orm";
 
 initializeDatabase();
 
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResponse = rateLimitMiddleware(request);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+  
   try {
     const authUser = await getAuthUser();
     if (!authUser) {
@@ -57,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await query;
-    return NextResponse.json({ bookings: result });
+    return addRateLimitHeaders(NextResponse.json({ bookings: result }), request);
   } catch (error) {
     console.error("Get bookings error:", error);
     return NextResponse.json({ error: "Failed to get bookings" }, { status: 500 });
@@ -142,7 +149,7 @@ export async function POST(request: NextRequest) {
       type: "booking",
     });
 
-    return NextResponse.json({ booking: newBooking }, { status: 201 });
+    return addRateLimitHeaders(NextResponse.json({ booking: newBooking }, { status: 201 }), request);
   } catch (error) {
     console.error("Create booking error:", error);
     return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });

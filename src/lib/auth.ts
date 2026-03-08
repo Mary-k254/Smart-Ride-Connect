@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 const JWT_SECRET = process.env.JWT_SECRET || "matatu-kenya-secret-key-2024-secure";
@@ -11,6 +11,7 @@ export interface JWTPayload {
   phone?: string;
   role: "passenger" | "driver" | "manager";
   name: string;
+  [key: string]: unknown;
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -21,13 +22,18 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
-export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+export async function generateToken(payload: JWTPayload): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(JWT_EXPIRES_IN)
+    .sign(new TextEncoder().encode(JWT_SECRET));
 }
 
-export function verifyToken(token: string): JWTPayload | null {
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
+    const { payload } = await jwtVerify(token, new TextEncoder().encode(JWT_SECRET));
+    return payload as unknown as JWTPayload;
   } catch {
     return null;
   }
