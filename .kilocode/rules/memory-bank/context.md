@@ -22,6 +22,8 @@ The template is a clean Next.js 16 starter with TypeScript and Tailwind CSS 4. I
   - **Solution: Replaced Drizzle ORM with raw SQL queries**
 - [x] Complete rewrite of all 15 API routes to use raw SQL
 - [x] New `src/lib/db.ts` supports both SQLite (local) and Vercel Postgres (production)
+- [x] Fixed registration failure by replacing @vercel/postgres with pg library
+- [x] Added convertQuery() function to convert ? placeholders to PostgreSQL $1, $2 syntax
 - [x] Build passes: `bun typecheck && bun lint`
 
 ## Current Structure
@@ -45,7 +47,7 @@ The app now uses raw SQL queries instead of Drizzle ORM, enabling deployment to:
 
 ### How It Works
 
-1. On Vercel: Detects `POSTGRES_URL` env var → Uses `@vercel/postgres`
+1. On Vercel: Detects `POSTGRES_URL` env var → Uses `pg` library (not @vercel/postgres)
 2. Local: Falls back to `better-sqlite3`
 
 All API routes use the unified `dbQuery()`, `dbGet()`, `dbInsert()`, `dbExecute()` functions.
@@ -112,3 +114,4 @@ On Vercel:
 | 2024-03 | Built complete MatatuConnect Kenya transport system |
 | 2024-03 | Migrated database from SQLite to Vercel Postgres to Supabase (multiple attempts) |
 | 2024-03 | Complete rewrite: Replaced Drizzle ORM with raw SQL queries for Vercel compatibility |
+| 2024-03 | Fixed registration: Switched from @vercel/postgres to pg library for proper parameterized queries |
