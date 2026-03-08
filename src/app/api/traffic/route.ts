@@ -22,7 +22,7 @@ export async function GET() {
       })
       .from(trafficAlerts)
       .leftJoin(routes, eq(trafficAlerts.routeId, routes.id))
-      .where(eq(trafficAlerts.isActive, true));
+      .where(eq(trafficAlerts.isActive, 1));
 
     return NextResponse.json({ alerts });
   } catch (error) {

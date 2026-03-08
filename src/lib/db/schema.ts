@@ -1,17 +1,13 @@
-import { sql } from "drizzle-orm";
 import {
   integer,
   real,
-  pgTable,
+  sqliteTable,
   text,
-  boolean,
-  timestamp,
-  serial,
-} from "drizzle-orm/pg-core";
+} from "drizzle-orm/sqlite-core";
 
 // Users table
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+export const users = sqliteTable("users", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   email: text("email").unique(),
   phone: text("phone").unique(),
@@ -20,27 +16,27 @@ export const users = pgTable("users", {
     .notNull()
     .default("passenger"),
   profileImage: text("profile_image"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  isActive: integer("is_active").default(1),
+  createdAt: text("created_at"),
+  updatedAt: text("updated_at"),
 });
 
 // SACCOs table
-export const saccos = pgTable("saccos", {
-  id: serial("id").primaryKey(),
+export const saccos = sqliteTable("saccos", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   registrationNumber: text("registration_number").unique().notNull(),
   managerId: integer("manager_id").references(() => users.id),
   phone: text("phone"),
   email: text("email"),
   address: text("address"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  isActive: integer("is_active").default(1),
+  createdAt: text("created_at"),
 });
 
 // Routes table
-export const routes = pgTable("routes", {
-  id: serial("id").primaryKey(),
+export const routes = sqliteTable("routes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   origin: text("origin").notNull(),
   destination: text("destination").notNull(),
@@ -51,13 +47,13 @@ export const routes = pgTable("routes", {
   distanceKm: real("distance_km").notNull(),
   baseFarePerKm: real("base_fare_per_km").notNull().default(10),
   estimatedDurationMin: integer("estimated_duration_min"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
+  isActive: integer("is_active").default(1),
+  createdAt: text("created_at"),
 });
 
 // Vehicles table
-export const vehicles = pgTable("vehicles", {
-  id: serial("id").primaryKey(),
+export const vehicles = sqliteTable("vehicles", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   plateNumber: text("plate_number").unique().notNull(),
   model: text("model").notNull(),
   capacity: integer("capacity").notNull().default(14),
@@ -68,14 +64,14 @@ export const vehicles = pgTable("vehicles", {
   currentLng: real("current_lng"),
   status: text("status", { enum: ["active", "inactive", "maintenance", "en_route"] })
     .default("inactive"),
-  lastLocationUpdate: timestamp("last_location_update"),
-  isGpsActive: boolean("is_gps_active").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  lastLocationUpdate: text("last_location_update"),
+  isGpsActive: integer("is_gps_active").default(0),
+  createdAt: text("created_at"),
 });
 
 // Bookings table
-export const bookings = pgTable("bookings", {
-  id: serial("id").primaryKey(),
+export const bookings = sqliteTable("bookings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   passengerId: integer("passenger_id")
     .references(() => users.id)
     .notNull(),
@@ -97,29 +93,29 @@ export const bookings = pgTable("bookings", {
   }).default("unpaid"),
   paymentMethod: text("payment_method"),
   seatNumber: integer("seat_number"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  createdAt: text("created_at"),
+  updatedAt: text("updated_at"),
 });
 
 // Trips table
-export const trips = pgTable("trips", {
-  id: serial("id").primaryKey(),
+export const trips = sqliteTable("trips", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   driverId: integer("driver_id").references(() => users.id).notNull(),
   vehicleId: integer("vehicle_id").references(() => vehicles.id).notNull(),
   routeId: integer("route_id").references(() => routes.id).notNull(),
-  startTime: timestamp("start_time"),
-  endTime: timestamp("end_time"),
+  startTime: text("start_time"),
+  endTime: text("end_time"),
   distanceKm: real("distance_km"),
   passengersCount: integer("passengers_count").default(0),
   totalRevenue: real("total_revenue").default(0),
   status: text("status", { enum: ["ongoing", "completed", "cancelled"] })
     .default("ongoing"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at"),
 });
 
 // Payments table
-export const payments = pgTable("payments", {
-  id: serial("id").primaryKey(),
+export const payments = sqliteTable("payments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   bookingId: integer("booking_id")
     .references(() => bookings.id)
     .notNull(),
@@ -134,12 +130,12 @@ export const payments = pgTable("payments", {
   }).default("pending"),
   phoneNumber: text("phone_number"),
   receipt: text("receipt"),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: text("created_at"),
 });
 
 // Reviews table
-export const reviews = pgTable("reviews", {
-  id: serial("id").primaryKey(),
+export const reviews = sqliteTable("reviews", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   passengerId: integer("passenger_id")
     .references(() => users.id)
     .notNull(),
@@ -148,28 +144,28 @@ export const reviews = pgTable("reviews", {
     .notNull(),
   tripId: integer("trip_id").references(() => trips.id),
   bookingId: integer("booking_id").references(() => bookings.id),
-  rating: integer("rating").notNull(), // 1-5
+  rating: integer("rating").notNull(),
   comment: text("comment"),
-  isReported: boolean("is_reported").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  isReported: integer("is_reported").default(0),
+  createdAt: text("created_at"),
 });
 
 // Notifications table
-export const notifications = pgTable("notifications", {
-  id: serial("id").primaryKey(),
+export const notifications = sqliteTable("notifications", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id).notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
   type: text("type", {
     enum: ["booking", "payment", "vehicle", "traffic", "system"],
   }).notNull(),
-  isRead: boolean("is_read").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  isRead: integer("is_read").default(0),
+  createdAt: text("created_at"),
 });
 
 // Traffic alerts table
-export const trafficAlerts = pgTable("traffic_alerts", {
-  id: serial("id").primaryKey(),
+export const trafficAlerts = sqliteTable("traffic_alerts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   routeId: integer("route_id").references(() => routes.id),
   title: text("title").notNull(),
   description: text("description"),
@@ -178,9 +174,9 @@ export const trafficAlerts = pgTable("traffic_alerts", {
   ),
   lat: real("lat"),
   lng: real("lng"),
-  isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  expiresAt: timestamp("expires_at"),
+  isActive: integer("is_active").default(1),
+  createdAt: text("created_at"),
+  expiresAt: text("expires_at"),
 });
 
 export type User = typeof users.$inferSelect;

@@ -1,53 +1,53 @@
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";
 
-// Create the database connection using Supabase PostgreSQL
-// Connection string format: postgres://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
-const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+// Create SQLite database connection
+const sqlite = new Database("data/sqlite.db");
 
-if (!connectionString) {
-  console.warn("DATABASE_URL or POSTGRES_URL not set. Database operations will fail.");
-}
+// Enable WAL mode for better performance
+sqlite.pragma("journal_mode = WAL");
 
-export const sql = postgres(connectionString || "postgres://localhost:5432/postgres");
-export const db = drizzle(sql, { schema });
+export const db = drizzle(sqlite, { schema });
+
+// For raw SQL queries
+export const sql = sqlite;
 
 // Initialize tables
 export async function initializeDatabase() {
-  // Create tables if they don't exist
-  await sql`
+  // Create tables if they don't exist (SQLite syntax)
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       email TEXT UNIQUE,
       phone TEXT UNIQUE,
       password TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'passenger',
       profile_image TEXT,
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS saccos (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       registration_number TEXT UNIQUE NOT NULL,
       manager_id INTEGER REFERENCES users(id),
       phone TEXT,
       email TEXT,
       address TEXT,
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS routes (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       origin TEXT NOT NULL,
       destination TEXT NOT NULL,
@@ -58,14 +58,14 @@ export async function initializeDatabase() {
       distance_km REAL NOT NULL,
       base_fare_per_km REAL NOT NULL DEFAULT 10,
       estimated_duration_min INTEGER,
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS vehicles (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       plate_number TEXT UNIQUE NOT NULL,
       model TEXT NOT NULL,
       capacity INTEGER NOT NULL DEFAULT 14,
@@ -75,15 +75,15 @@ export async function initializeDatabase() {
       current_lat REAL,
       current_lng REAL,
       status TEXT DEFAULT 'inactive',
-      last_location_update TIMESTAMP WITH TIME ZONE,
-      is_gps_active BOOLEAN DEFAULT false,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      last_location_update TEXT,
+      is_gps_active INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS bookings (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       passenger_id INTEGER NOT NULL REFERENCES users(id),
       vehicle_id INTEGER REFERENCES vehicles(id),
       route_id INTEGER NOT NULL REFERENCES routes(id),
@@ -99,30 +99,30 @@ export async function initializeDatabase() {
       payment_status TEXT DEFAULT 'unpaid',
       payment_method TEXT,
       seat_number INTEGER,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS trips (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       driver_id INTEGER NOT NULL REFERENCES users(id),
       vehicle_id INTEGER NOT NULL REFERENCES vehicles(id),
       route_id INTEGER NOT NULL REFERENCES routes(id),
-      start_time TIMESTAMP WITH TIME ZONE,
-      end_time TIMESTAMP WITH TIME ZONE,
+      start_time TEXT,
+      end_time TEXT,
       distance_km REAL,
       passengers_count INTEGER DEFAULT 0,
       total_revenue REAL DEFAULT 0,
       status TEXT DEFAULT 'ongoing',
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS payments (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       booking_id INTEGER NOT NULL REFERENCES bookings(id),
       passenger_id INTEGER NOT NULL REFERENCES users(id),
       amount REAL NOT NULL,
@@ -131,63 +131,62 @@ export async function initializeDatabase() {
       status TEXT DEFAULT 'pending',
       phone_number TEXT,
       receipt TEXT,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS reviews (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       passenger_id INTEGER NOT NULL REFERENCES users(id),
       driver_id INTEGER NOT NULL REFERENCES users(id),
       trip_id INTEGER REFERENCES trips(id),
       booking_id INTEGER REFERENCES bookings(id),
       rating INTEGER NOT NULL,
       comment TEXT,
-      is_reported BOOLEAN DEFAULT false,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      is_reported INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS notifications (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL REFERENCES users(id),
       title TEXT NOT NULL,
       message TEXT NOT NULL,
       type TEXT NOT NULL,
-      is_read BOOLEAN DEFAULT false,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );
-  `;
+      is_read INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 
-  await sql`
+  sql.exec(`
     CREATE TABLE IF NOT EXISTS traffic_alerts (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       route_id INTEGER REFERENCES routes(id),
       title TEXT NOT NULL,
       description TEXT,
       severity TEXT DEFAULT 'medium',
       lat REAL,
       lng REAL,
-      is_active BOOLEAN DEFAULT true,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      expires_at TIMESTAMP WITH TIME ZONE
-    );
-  `;
+      is_active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      expires_at TEXT
+    )
+  `);
 
   // Seed initial data
-  await seedInitialData();
+  seedInitialData();
 }
 
-async function seedInitialData() {
+function seedInitialData() {
   // Check if routes already exist
-  const result = await sql<{ count: string }[]>`SELECT COUNT(*) as count FROM routes`;
-  const count = Number(result[0]?.count || 0);
-  if (count > 0) return;
+  const result = sql.prepare("SELECT COUNT(*) as count FROM routes").get() as { count: number };
+  if (result.count > 0) return;
 
   // Seed routes (major Kenyan matatu routes)
-  await sql`
+  sql.exec(`
     INSERT INTO routes (name, origin, destination, origin_lat, origin_lng, dest_lat, dest_lng, distance_km, base_fare_per_km, estimated_duration_min) VALUES
     ('Nairobi - Mombasa', 'Nairobi CBD', 'Mombasa', -1.2921, 36.8219, -4.0435, 39.6682, 480, 1.5, 480),
     ('Nairobi - Kisumu', 'Nairobi CBD', 'Kisumu', -1.2921, 36.8219, -0.0917, 34.7680, 350, 1.5, 360),
@@ -196,23 +195,25 @@ async function seedInitialData() {
     ('Nairobi - Thika', 'Nairobi CBD', 'Thika', -1.2921, 36.8219, -1.0332, 37.0693, 45, 1.5, 60),
     ('Nairobi - Machakos', 'Nairobi CBD', 'Machakos', -1.2921, 36.8219, -1.5177, 37.2634, 65, 1.5, 75),
     ('Nairobi - Nyeri', 'Nairobi CBD', 'Nyeri', -1.2921, 36.8219, -0.4167, 36.9500, 155, 1.5, 150),
-    ('Mombasa - Malindi', 'Mombasa', 'Malindi', -4.0435, 39.6682, -3.2138, 40.1169, 120, 1.5, 120);
-  `;
+    ('Mombasa - Malindi', 'Mombasa', 'Malindi', -4.0435, 39.6682, -3.2138, 40.1169, 120, 1.5, 120)
+  `);
 
   // Seed saccos
-  await sql`
+  sql.exec(`
     INSERT INTO saccos (name, registration_number, phone, email, address) VALUES
     ('Modern Coast Express', 'SACCO001', '+254700000001', 'info@moderncoast.co.ke', 'Nairobi CBD'),
     ('Easy Coach', 'SACCO002', '+254700000002', 'info@easycoach.co.ke', 'Nairobi CBD'),
     ('Mash Poa', 'SACCO003', '+254700000003', 'info@mashpoa.co.ke', 'Nairobi CBD'),
-    ('Guardian Angel', 'SACCO004', '+254700000004', 'info@guardian.co.ke', 'Mombasa');
-  `;
+    ('Guardian Angel', 'SACCO004', '+254700000004', 'info@guardian.co.ke', 'Mombasa')
+  `);
 
   // Seed traffic alerts
-  await sql`
+  sql.exec(`
     INSERT INTO traffic_alerts (route_id, title, description, severity, lat, lng) VALUES
     (1, 'Heavy Traffic at Mlolongo', 'Expect delays of 30-45 minutes near Mlolongo junction', 'high', -1.3500, 36.9000),
     (2, 'Road Works at Mai Mahiu', 'Single lane traffic due to road construction', 'medium', -0.9833, 36.5167),
-    (3, 'Normal Traffic', 'Traffic flowing smoothly on Nakuru highway', 'low', -0.8000, 36.4000);
-  `;
+    (3, 'Normal Traffic', 'Traffic flowing smoothly on Nakuru highway', 'low', -0.8000, 36.4000)
+  `);
+
+  console.log("Database seeded successfully!");
 }

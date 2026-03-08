@@ -78,8 +78,8 @@ export async function POST() {
         currentLat: -1.2921,
         currentLng: 36.8219,
         status: "en_route",
-        isGpsActive: true,
-        lastLocationUpdate: new Date(),
+        isGpsActive: 1,
+        lastLocationUpdate: new Date().toISOString(),
       },
       {
         plateNumber: "KCB 456B",
@@ -90,7 +90,7 @@ export async function POST() {
         currentLat: -0.5,
         currentLng: 36.5,
         status: "active",
-        isGpsActive: false,
+        isGpsActive: 0,
       },
       {
         plateNumber: "KCC 789C",

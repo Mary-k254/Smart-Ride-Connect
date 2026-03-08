@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         driverId: authUser.userId,
         vehicleId,
         routeId,
-        startTime: new Date(),
+        startTime: new Date().toISOString(),
         status: "ongoing",
       })
       .returning();

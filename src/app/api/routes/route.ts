@@ -10,7 +10,7 @@ export async function GET() {
     const allRoutes = await db
       .select()
       .from(routes)
-      .where(eq(routes.isActive, true));
+      .where(eq(routes.isActive, 1));
 
     // Get vehicle counts per route
     const routesWithVehicles = await Promise.all(

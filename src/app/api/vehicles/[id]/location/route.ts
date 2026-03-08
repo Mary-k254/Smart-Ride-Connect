@@ -32,8 +32,8 @@ export async function PUT(
       .set({
         currentLat: lat,
         currentLng: lng,
-        lastLocationUpdate: new Date(),
-        isGpsActive: true,
+        lastLocationUpdate: new Date().toISOString(),
+        isGpsActive: 1,
         status: "en_route",
       })
       .where(eq(vehicles.id, parseInt(id)));

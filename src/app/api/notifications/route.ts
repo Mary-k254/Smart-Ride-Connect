@@ -42,13 +42,13 @@ export async function PUT(request: NextRequest) {
     if (notificationId) {
       await db
         .update(notifications)
-        .set({ isRead: true })
+        .set({ isRead: 1 })
         .where(eq(notifications.id, notificationId));
     } else {
       // Mark all as read
       await db
         .update(notifications)
-        .set({ isRead: true })
+        .set({ isRead: 1 })
         .where(eq(notifications.userId, authUser.userId));
     }
 
